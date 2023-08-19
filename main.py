@@ -1,3 +1,8 @@
+RECORDS_ON_LIST = 7 #Количество записей на одной странице телефонной книги
+CHARS_FOR_ID = 3 #Количество зарезервированных символов для отображения поля ID
+CHARS_FOR_COMPANY = 20 #Количество зарезервированных символов для названия компании
+CHARS_FOR_NAME = 40 #Количество зарезервированных символов для ФИО
+
 def get_id():
     """Функция для нахождения уникального ID для записи.
     Используется при создании новой записи
@@ -26,22 +31,41 @@ def get_id():
 class PhoneRecord:
     """Класс записи в телефонной книге. Инициалоизирует элементы в нужном виде
     """
-    phone_work = ""
-    phone_personal = ""
     organization = ""
     name = ""
     surname = ""
     fname = ""
+    phone_work = ""
+    phone_personal = ""
 
     def make_record(self):
-        """
-        Функция подготовки данных для записи в файл
+        """Функция подготовки данных для записи в файл.
         Возвращает готовую строку для записи в файл
         """
         record = (f"{get_id()},{self.organization},{self.name},{self.surname},"
                   f"{self.fname},{self.phone_work},{self.phone_personal};\n")
         return record
 
+    def read_record(self, record):
+        """Функция разбивает записанные в файл строки по переменным
+        Возвращает список
+        """
+        x = 0
+        context = ["" for z in range(7)]
+        for char in record:
+            if char != ",":
+                if char == ";":
+                    break
+                context[x] += char
+            else:
+                x += 1
+        return context
+
+    def combine_record(self, context):
+        record = (f"{context[0].rjust(CHARS_FOR_ID, ' ')} {context[1].center(CHARS_FOR_COMPANY, ' ')} "
+                  f"{(context[3]+' '+context[2]+' '+context[4]).center(CHARS_FOR_NAME, ' ')}"
+                  f"{context[5].center(13, ' ')} {context[6].center(13, ' ')}") #13 - чтобы вмещалась шапка
+        return record
 
 def phone_validation(number: str):
     """Функция валидации вводимого номера телефона.
@@ -140,23 +164,50 @@ class PhoneBook:
         pass
 
     def show_phone_book(self):
-        pass
+        with (open("phonebase.txt", "rt") as phonebase):
+            page_number = 1
+            naming = ["ID","Организация","ФИО","Рабочий тел", "Личный тел"]
+            shapka = (f"{naming[0].rjust(CHARS_FOR_ID, ' ')} {naming[1].center(CHARS_FOR_COMPANY, ' ')} "
+                      f"{naming[2].center(CHARS_FOR_NAME, ' ')}"
+                      f"{naming[3].center(13, ' ')} {naming[4].center(13, ' ')}")
+                                                                    # 13 - чтобы вмещалась шапка
+            have_back_list = "Z - листать назад"
+            have_forw_list = ""
+            print(shapka)
+            print("-" * len(shapka))
+            for line_number, record in enumerate(phonebase):
+                context = PhoneRecord().read_record(record)
+                if line_number < RECORDS_ON_LIST:
+                    print(PhoneRecord().combine_record(context))
+                if line_number == RECORDS_ON_LIST:
+                    have_forw_list = "X - листать вперед"
+
+            podval = (f"{'-' * len(shapka)}\nСтр.{page_number}     {have_back_list}      {have_forw_list}\n"
+                      f"Чтобы редактировать запись, введите ее ID")
+            print(podval)
+
+
+
+
 
     def user_menu(self):
         print('\nТЕЛЕФОНАЯ КНИГА\n\n'
               '1. Просмотр и редактирование\n'
               '2. Добавить запись\n'
-              '3. Поиск записей\n')
+              '3. Поиск записей\n'
+              '4. Выход\n')
         user_choice = 0
-        while user_choice not in {"1", "2", "3"}:
+        while user_choice not in {"1", "2", "3", "4"}:
             user_choice = input('Введите номер пункта и нажмите ENTER\n')
-            print('Такого пункта нет, попробуйте снова') if user_choice not in {"1", "2", "3"} else None
+            print('Такого пункта нет, попробуйте снова') if user_choice not in {"1", "2", "3", "4"} else None
         if user_choice == "1":
             self.show_phone_book()
         if user_choice == "2":
             self.add_record()
         if user_choice == "3":
             self.find_record()
+        if user_choice == "4":
+            print("Вы вышли из программы")
 
 
 if __name__ == '__main__':
