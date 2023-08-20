@@ -1,16 +1,16 @@
 from sys import exit
 
-#--Настройки отображения записей:
+# --Настройки отображения записей:
 
-RECORDS_ON_LIST = 7 #Количество записей на одной странице телефонной книги
-CHARS_FOR_ID = 3 #Количество зарезервированных символов для отображения поля ID
-CHARS_FOR_COMPANY = 20 #Количество зарезервированных символов для названия компании
-CHARS_FOR_NAME = 40 #Количество зарезервированных символов для ФИО
-CHARS_FOR_PHONE = 13 #Количество зарезервированных символов для телефона (13 - чтобы вместился заголовок)
+RECORDS_ON_LIST = 7  # Количество записей на одной странице телефонной книги
+CHARS_FOR_ID = 3  # Количество зарезервированных символов для отображения поля ID
+CHARS_FOR_COMPANY = 20  # Количество зарезервированных символов для названия компании
+CHARS_FOR_NAME = 40  # Количество зарезервированных символов для ФИО
+CHARS_FOR_PHONE = 13  # Количество зарезервированных символов для телефона (13 - чтобы вместился заголовок)
 
 
 def get_id():
-    """Функция для нахождения уникального ID для записи.
+    """Функция нахождения уникального ID для записи.
     Используется при создании новой записи
     """
     with open('phonebase.txt', "rt") as phonesbase:
@@ -68,7 +68,7 @@ def text_validation(text: str):
 
 
 class PhoneRecord:
-    """Класс записи в телефонной книге. Инициалоизирует элементы в нужном виде
+    """Класс записи в телефонной книге. Инициализирует элементы в нужном виде
     """
     organization = ""
     name = ""
@@ -85,12 +85,13 @@ class PhoneRecord:
                   f"{self.fname},{self.phone_work},{self.phone_personal};\n")
         return record
 
-    def read_record(self, record):
+    @staticmethod
+    def read_record(record):
         """Функция разбивает записанные в файл строки по переменным
         Возвращает список
         """
         x = 0
-        context = ["" for z in range(7)]
+        context = [""] * 7
         for char in record:
             if char != ",":
                 if char == ";":
@@ -100,16 +101,21 @@ class PhoneRecord:
                 x += 1
         return context
 
-    def combine_record(self, context):
+    @staticmethod
+    def combine_record(context):
+        """Функция подготовки строки для вывода на экран"""
         record = (f"{context[0].rjust(CHARS_FOR_ID, ' ')} {context[1].center(CHARS_FOR_COMPANY, ' ')} "
-                  f"{(context[3]+' '+context[2]+' '+context[4]).center(CHARS_FOR_NAME, ' ')}"
-                  f"{context[5].center(CHARS_FOR_PHONE, ' ')} {context[6].center(CHARS_FOR_PHONE, ' ')}") #13 - чтобы вмещалась шапка
+                  f"{(context[3] + ' ' + context[2] + ' ' + context[4]).center(CHARS_FOR_NAME, ' ')}"
+                  f"{context[5].center(CHARS_FOR_PHONE, ' ')} {context[6].center(CHARS_FOR_PHONE, ' ')}")
         return record
 
 
 class PhoneBook:
     """Телефонная книга с основными функциями для взаимодействия"""
-    def editing(self, record):
+
+    @staticmethod
+    def editing(record):
+        """Функция последовательно предлагает на ввод поля, если данные в полях уже есть, выводит их"""
         both_valid_flag = False
         while not both_valid_flag:
             valid_flag = False
@@ -168,6 +174,7 @@ class PhoneBook:
         self.user_menu()
 
     def edit_record(self, selected_record):
+        """Функция редактирования записи"""
         with open('phonebase.txt', 'rt') as phonebase:
             for line_number, line in enumerate(phonebase):
                 record_id = ""
@@ -199,9 +206,36 @@ class PhoneBook:
         self.show_phone_book(1)
 
     def find_record(self):
-        pass
+        print("Поиск записей по параметру или комбинации параметров.\n\n"
+              "Введите последовательно информацию для поиска, можно вводить не полностью, поиск будет произведен\n"
+              "по первым символам\n")
+        record_id = input('ID:  ')
+        record_organization, record_name, record_surname = '', '', ''
+        record_fname, record_phone_work, record_phone_personal = '', '', ''
+        if not record_id:
+            record_organization = input('Организация:   ')
+            record_name = input('Имя:   ')
+            record_surname = input('Фамилия:   ')
+            record_fname = input('Отчество:   ')
+            record_phone_work = input('Рабочий телефон:   ')
+            record_phone_personal = input('Личный телефон:   ')
+        print(self.shapka())
+        with open('phonebase.txt', 'rt') as phonebase:
+            for line in phonebase:
+                context = PhoneRecord.read_record(line)
+                if context[0] == record_id:
+                    print(PhoneRecord.combine_record(context))
+                if (record_organization.lower() in context[1][0:len(record_organization)].lower() and
+                        record_name.lower() in context[2][0:len(record_name)].lower() and
+                        record_surname.lower() in context[3][0:len(record_surname)].lower() and
+                        record_fname.lower() in context[4][0:len(record_fname)].lower() and
+                        record_phone_work.lower() in context[5][0:len(record_phone_work)].lower() and
+                        record_phone_personal.lower() in context[6][0:len(record_phone_personal)].lower()):
+                    print(PhoneRecord.combine_record(context))
+        self.user_menu()
 
     def show_phone_book(self, page_number):
+        """Отображение книги на экране. Принимает на вход номер страницы, вызывает сама себя при перелистывании"""
         have_forw_list_bool, have_back_list_bool, ids_list = self.combine_records_for_view(page_number)
         users_choice_list = []
         users_choice = "_"
@@ -235,16 +269,21 @@ class PhoneBook:
             if users_choice in ids_list:
                 self.edit_record(users_choice)
 
+    @staticmethod
+    def shapka():
+        naming = ["ID", "Организация", "ФИО", "Рабочий тел", "Личный тел"]
+        shapka = (f"\n{naming[0].center(CHARS_FOR_ID, ' ')} {naming[1].center(CHARS_FOR_COMPANY, ' ')} "
+                  f"{naming[2].center(CHARS_FOR_NAME, ' ')}"
+                  f"{naming[3].center(CHARS_FOR_PHONE, ' ')} {naming[4].center(CHARS_FOR_PHONE, ' ')}")
+        return shapka
 
     def combine_records_for_view(self, page_number):
         """Получает на вход номер стрницы для отображения.
         Формирует список записей для отображения, форматирует их, выводит шапку и подвал с инструкциями
-        Возвращает BOOL есть ли предыдущая и следующая страницы
+        Возвращает BOOL есть ли предыдущая и следующая страницы, а также список ID выведенных записей,
+        чтобы их можно было редактировать.
         """
-        naming = ["ID","Организация","ФИО","Рабочий тел", "Личный тел"]
-        shapka = (f"{naming[0].center(CHARS_FOR_ID, ' ')} {naming[1].center(CHARS_FOR_COMPANY, ' ')} "
-                  f"{naming[2].center(CHARS_FOR_NAME, ' ')}"
-                  f"{naming[3].center(CHARS_FOR_PHONE, ' ')} {naming[4].center(CHARS_FOR_PHONE, ' ')}")
+        shapka = self.shapka()
         print(shapka)
         print("-" * len(shapka))
         have_back_list = ""
@@ -254,13 +293,13 @@ class PhoneBook:
         have_forw_list_bool = False
         with (open("phonebase.txt", "rt") as phonebase):
             for line_number, record in enumerate(phonebase):
-                context = PhoneRecord().read_record(record)
+                context = PhoneRecord.read_record(record)
                 ids_list.append(context[0])
                 if page_number > 1:
                     have_back_list = "Z - листать назад"
                     have_back_list_bool = True
                 if RECORDS_ON_LIST * page_number > line_number >= RECORDS_ON_LIST * (page_number - 1):
-                    print(PhoneRecord().combine_record(context))
+                    print(PhoneRecord.combine_record(context))
                 if line_number == RECORDS_ON_LIST * page_number:
                     have_forw_list = "X - листать вперед"
                     have_forw_list_bool = True
@@ -271,6 +310,7 @@ class PhoneBook:
         return have_forw_list_bool, have_back_list_bool, ids_list
 
     def user_menu(self):
+        """Основное меню программы"""
         print('\nТЕЛЕФОНАЯ КНИГА\n\n'
               '1. Просмотр и редактирование\n'
               '2. Добавить запись\n'
@@ -289,6 +329,7 @@ class PhoneBook:
         if user_choice == "4":
             print("Вы вышли из программы")
             exit()
+
 
 if __name__ == '__main__':
     PhoneBook().user_menu()
