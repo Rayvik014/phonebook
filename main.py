@@ -115,7 +115,9 @@ class PhoneBook:
 
     @staticmethod
     def editing(record):
-        """Функция последовательно предлагает на ввод поля, если данные в полях уже есть, выводит их"""
+        """Функция последовательно предлагает на ввод поля, если данные в полях уже есть, выводит их
+        На вход принимает объект PhoneRecord
+        """
         both_valid_flag = False
         while not both_valid_flag:
             valid_flag = False
@@ -205,7 +207,36 @@ class PhoneBook:
                     phonebase.write(line)
         self.show_phone_book(1)
 
+    def delete_record(self, selected_record_plus_d):
+        """Функция удаления записи из базы"""
+        selected_record = selected_record_plus_d[0:-1]
+        user_answer = "_"
+        while user_answer not in "yn":
+            user_answer = input(f'\nВы действительно хотите удалить запись {selected_record}? (y/n)')
+        if user_answer.lower() == "y":
+            deleting_line_number=-1
+            with open('phonebase.txt', 'rt') as phonebase:
+                lines = phonebase.readlines()
+                for line_number, line in enumerate(lines):
+                    record_id = ""
+                    for char in line:
+                        if char.isdigit():
+                            record_id += char
+                        else:
+                            break
+                    if record_id == selected_record:
+                        deleting_line_number = line_number
+            with open('phonebase.txt', 'wt') as phonebase:
+                for line_number, line in enumerate(lines):
+                    if line_number == deleting_line_number:
+                        continue
+                    else:
+                        phonebase.write(line)
+            print(f'\nЗапись {selected_record} былв удалена\n')
+        self.show_phone_book(1)
+
     def find_record(self):
+        """Функция поиска по базе"""
         print("Поиск записей по параметру или комбинации параметров.\n\n"
               "Введите последовательно информацию для поиска, можно вводить не полностью, поиск будет произведен\n"
               "по первым символам\n")
@@ -268,6 +299,11 @@ class PhoneBook:
                 PhoneBook().user_menu()
             if users_choice in ids_list:
                 self.edit_record(users_choice)
+            deleting_list = []
+            for ids in ids_list:
+                deleting_list.append(str(ids) + "d")
+            if users_choice.lower() in deleting_list:
+                self.delete_record(users_choice)
 
     @staticmethod
     def shapka():
@@ -305,7 +341,8 @@ class PhoneBook:
                     have_forw_list_bool = True
                     break
         podval = (f"{'-' * len(shapka)}\nСтр.{page_number}     {have_back_list}      {have_forw_list}\n"
-                  f"Чтобы редактировать запись, введите ее ID     Q - Для выхода в меню")
+                  f"Чтобы редактировать запись, введите ее ID     Q - Для выхода в меню\n"
+                  f"Чтобы удалить запись, введите ее ID, а также букву d")
         print(podval)
         return have_forw_list_bool, have_back_list_bool, ids_list
 
