@@ -9,7 +9,7 @@ CHARS_FOR_NAME = 40  # Количество зарезервированных �
 CHARS_FOR_PHONE = 13  # Количество зарезервированных символов для телефона (13 - чтобы вместился заголовок)
 
 
-def get_id():
+def get_id() -> int:
     """Функция нахождения уникального ID для записи.
     Используется при создании новой записи
     """
@@ -34,7 +34,7 @@ def get_id():
             return new_id
 
 
-def phone_validation(number: str):
+def phone_validation(number: str) -> (bool, str):
     """Функция валидации вводимого номера телефона.
     Принимает номер телефона в виде строки.
     Проверяет наличие 11 знаков, а также только ли цифры содержатся в значении.
@@ -53,7 +53,7 @@ def phone_validation(number: str):
     return valid_flag, message
 
 
-def text_validation(text: str):
+def text_validation(text: str) -> (bool, str):
     """Функция валидации вводимого текста.
     Принимает текст.
     Проверяет наличие в тексте запятых.
@@ -77,7 +77,7 @@ class PhoneRecord:
     phone_work = ""
     phone_personal = ""
 
-    def make_record(self, record_id=get_id()):
+    def make_record(self, record_id=get_id()) -> str:
         """Функция подготовки данных для записи в файл.
         Возвращает готовую строку для записи в файл
         """
@@ -86,7 +86,7 @@ class PhoneRecord:
         return record
 
     @staticmethod
-    def read_record(record):
+    def read_record(record: str) -> list:
         """Функция разбивает записанные в файл строки по переменным
         Возвращает список
         """
@@ -102,7 +102,7 @@ class PhoneRecord:
         return context
 
     @staticmethod
-    def combine_record(context):
+    def combine_record(context: list) -> str:
         """Функция подготовки строки для вывода на экран"""
         record = (f"{context[0].rjust(CHARS_FOR_ID, ' ')} {context[1].center(CHARS_FOR_COMPANY, ' ')} "
                   f"{(context[3] + ' ' + context[2] + ' ' + context[4]).center(CHARS_FOR_NAME, ' ')}"
@@ -114,7 +114,7 @@ class PhoneBook:
     """Телефонная книга с основными функциями для взаимодействия"""
 
     @staticmethod
-    def editing(record):
+    def editing(record: PhoneRecord) -> None:
         """Функция последовательно предлагает на ввод поля, если данные в полях уже есть, выводит их
         На вход принимает объект PhoneRecord
         """
@@ -163,7 +163,7 @@ class PhoneBook:
             else:
                 print("Оба поля номера телефона не могут быть пустыми, заполните пожалуйста")
 
-    def add_record(self):
+    def add_record(self) -> None:
         """Добавить запись в книгу.
         Предлагает добавить новую запись, присваивает ID записи, записывает результат в файл
         """
@@ -175,7 +175,7 @@ class PhoneBook:
         print('\nЗапись добавлена в книгу')
         self.user_menu()
 
-    def edit_record(self, selected_record):
+    def edit_record(self, selected_record: str) -> None:
         """Функция редактирования записи"""
         with open('phonebase.txt', 'rt') as phonebase:
             for line_number, line in enumerate(phonebase):
@@ -207,14 +207,14 @@ class PhoneBook:
                     phonebase.write(line)
         self.show_phone_book(1)
 
-    def delete_record(self, selected_record_plus_d):
+    def delete_record(self, selected_record_plus_d: str) -> None:
         """Функция удаления записи из базы"""
         selected_record = selected_record_plus_d[0:-1]
         user_answer = "_"
         while user_answer not in "yn":
             user_answer = input(f'\nВы действительно хотите удалить запись {selected_record}? (y/n)')
         if user_answer.lower() == "y":
-            deleting_line_number=-1
+            deleting_line_number = -1
             with open('phonebase.txt', 'rt') as phonebase:
                 lines = phonebase.readlines()
                 for line_number, line in enumerate(lines):
@@ -235,7 +235,7 @@ class PhoneBook:
             print(f'\nЗапись {selected_record} былв удалена\n')
         self.show_phone_book(1)
 
-    def find_record(self):
+    def find_record(self) -> None:
         """Функция поиска по базе"""
         print("Поиск записей по параметру или комбинации параметров.\n\n"
               "Введите последовательно информацию для поиска, можно вводить не полностью, поиск будет произведен\n"
@@ -265,7 +265,7 @@ class PhoneBook:
                     print(PhoneRecord.combine_record(context))
         self.user_menu()
 
-    def show_phone_book(self, page_number):
+    def show_phone_book(self, page_number: int) -> None:
         """Отображение книги на экране. Принимает на вход номер страницы, вызывает сама себя при перелистывании"""
         have_forw_list_bool, have_back_list_bool, ids_list = self.combine_records_for_view(page_number)
         users_choice_list = []
@@ -306,14 +306,14 @@ class PhoneBook:
                 self.delete_record(users_choice)
 
     @staticmethod
-    def shapka():
+    def shapka() -> str:
         naming = ["ID", "Организация", "ФИО", "Рабочий тел", "Личный тел"]
         shapka = (f"\n{naming[0].center(CHARS_FOR_ID, ' ')} {naming[1].center(CHARS_FOR_COMPANY, ' ')} "
                   f"{naming[2].center(CHARS_FOR_NAME, ' ')}"
                   f"{naming[3].center(CHARS_FOR_PHONE, ' ')} {naming[4].center(CHARS_FOR_PHONE, ' ')}")
         return shapka
 
-    def combine_records_for_view(self, page_number):
+    def combine_records_for_view(self, page_number: int) -> (bool, bool, list):
         """Получает на вход номер стрницы для отображения.
         Формирует список записей для отображения, форматирует их, выводит шапку и подвал с инструкциями
         Возвращает BOOL есть ли предыдущая и следующая страницы, а также список ID выведенных записей,
@@ -346,7 +346,7 @@ class PhoneBook:
         print(podval)
         return have_forw_list_bool, have_back_list_bool, ids_list
 
-    def user_menu(self):
+    def user_menu(self) -> None:
         """Основное меню программы"""
         print('\nТЕЛЕФОНАЯ КНИГА\n\n'
               '1. Просмотр и редактирование\n'
